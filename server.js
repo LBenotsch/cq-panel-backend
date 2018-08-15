@@ -2,55 +2,55 @@
 const binance = require('binance-api-node').default;
 const express = require('express');
 const fs = require('fs');
-//const fileUpload = require('express-fileupload');
+const bodyParser = require("body-parser");
+const path = require('path');
+
 const app = express();
 const port = process.env.PORT || 8080;
 
-// routes will go here
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// returns binance account data, only if correct matching public key is provided
 app.get('/binance', function (req, res) {
   var key = req.param("key");
-  // Authenticated client, can make signed calls
-  const client = binance({
-    apiKey: key,
-    apiSecret: 'LhgQ04XDnSY3oU6M0H9RQMSrcDm0CoVP4gMcnpian1EzmVxKjKbfPlf4C0jBfoMU',
-  })
-  client.accountInfo().then(account => {
-    res.send(JSON.stringify(account.balances))
-  })
-  console.log("API Key Requested")
+  if (key == "hnFOruusrwhV5HJRDM2dQGZ1B5Oxv2gow4Eigjgdgs7JukbCG9ln4QLktOLUwB1N") {
+    // Authenticated client, can make signed calls
+    const client = binance({
+      apiKey: key,
+      apiSecret: 'LhgQ04XDnSY3oU6M0H9RQMSrcDm0CoVP4gMcnpian1EzmVxKjKbfPlf4C0jBfoMU',
+    })
+    client.accountInfo().then(account => {
+      res.send(JSON.stringify(account.balances))
+    })
+    console.log("/binance GET - API requested")
+  } else {
+    console.log("/binance GET - Wrong public key provided")
+  }
 });
 
-app.get('/upload', function (req, res) {
-  if (!req.param("coin"))
-    return res.status(400).send('No coin data recieved');
-
-  var coin = req.param("coin");
-
+app.post('/change_coin', function (req, res) {
+  var coin = req.body.coin;
+  res.end("done");
   fs.writeFile('coin.txt', coin, (err) => {
     // throws an error, you could also catch it here
     if (err) throw err;
-
-    // success case, the file was saved
-    res.send("Coin " + coin + " was saved! Returning to Panel...")
-    console.log('Coin saved!');
+    console.log('/change_coin POST - Saved to file: ' + coin);
   });
-  // res.writeHead(302, { 'Location': 'panel.cryptoquarry.net' });
-  // res.end();
 });
 
-// app.post('/receive', function (request, respond) {
-//   var body = '';
-//   filePath = __dirname + 'data.txt';
-//   request.on('data', function (data) {
-//     body += data;
-//   });
-
-//   request.on('end', function () {
-//     fs.appendFile(filePath, body, function () {
-//       respond.end();
-//     });
-//   });
-// });
+app.get('/which_coin', function (req, res) {
+  var filePath = path.join(__dirname, 'coin.txt');
+  fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+    if (!err) {
+      console.log('/which_coin GET - Coin requested from file: ' + data);
+      res.write(data);
+      res.end();
+    } else {
+      console.log(err);
+    }
+  });
+});
 
 // start the server
 app.listen(port);
