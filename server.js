@@ -11,6 +11,11 @@ const port = process.env.PORT || 8080;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.get('/', function (req, res) {
+  res.send("You have reached the cq-panel-backend node server");
+  console.log("/ GET - Homepage hit")
+});
+
 // returns binance account data, only if correct matching public key is provided
 app.get('/binance', function (req, res) {
   var key = req.param("key");
@@ -44,6 +49,7 @@ app.get('/which_coin', function (req, res) {
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
       console.log('/which_coin GET - Coin requested from file: ' + data);
+      res.setHeader("Content-Type", "text/html"); 
       res.write(data);
       res.end();
     } else {
