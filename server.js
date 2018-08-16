@@ -4,6 +4,7 @@ const express = require('express');
 const fs = require('fs');
 const bodyParser = require("body-parser");
 const path = require('path');
+const request = require('request');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -15,6 +16,24 @@ app.get('/', function (req, res) {
   res.send("You have reached the cq-panel-backend node server");
   console.log("/ GET - Homepage hit")
 });
+
+function PostGitlab() {
+  request.post(
+    'https://gitlab.com/api/v4/projects/5281857/trigger/pipeline',
+    {
+      json: {
+        'token': 'ba1d7bf9cbccc3105ada5dd06df157',
+        'ref': 'master',
+        'variables[ANSIBLE_TASK]': '.gitlab-ci.yml'
+      }
+    },
+    function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log("POST to gitlab success! whattomine-notifs job triggered.")
+      }
+    }
+  );
+}
 
 // returns binance account data, only if correct matching public key is provided
 app.get('/binance', function (req, res) {
@@ -42,6 +61,7 @@ app.post('/change_coin', function (req, res) {
     if (err) throw err;
     console.log('/change_coin POST - Saved to file: ' + coin);
   });
+  PostGitlab();
 });
 
 app.get('/which_coin', function (req, res) {
@@ -49,9 +69,10 @@ app.get('/which_coin', function (req, res) {
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
       console.log('/which_coin GET - Coin requested from file: ' + data);
-      res.setHeader("Content-Type", "text/html"); 
+      res.setHeader("Content-Type", "text/html");
       res.write(data);
       res.end();
+
     } else {
       console.log(err);
     }
