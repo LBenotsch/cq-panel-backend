@@ -13,6 +13,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.send("You have reached the cq-panel-backend node server");
   console.log("/ GET - Homepage hit")
 });
@@ -45,6 +47,8 @@ app.get('/binance', function (req, res) {
       apiSecret: 'LhgQ04XDnSY3oU6M0H9RQMSrcDm0CoVP4gMcnpian1EzmVxKjKbfPlf4C0jBfoMU',
     })
     client.accountInfo().then(account => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
       res.send(JSON.stringify(account.balances))
     })
     console.log("/binance GET - API requested")
@@ -70,6 +74,8 @@ app.get('/which_coin', function (req, res) {
     if (!err) {
       console.log('/which_coin GET - Coin requested from file: ' + data);
       res.setHeader("Content-Type", "text/html");
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
       res.write(data);
       res.end();
 
