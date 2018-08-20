@@ -59,6 +59,8 @@ app.get('/binance', function (req, res) {
 
 app.post('/change_coin', function (req, res) {
   var coin = req.body.coin;
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.end("done");
   fs.writeFile('coin.txt', coin, (err) => {
     // throws an error, you could also catch it here
