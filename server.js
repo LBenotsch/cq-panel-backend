@@ -5,12 +5,14 @@ const fs = require('fs');
 const bodyParser = require("body-parser");
 const path = require('path');
 const request = require('request');
+const requestIp = require('request-ip');
 
 const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(requestIp.mw());
 
 app.get('/', function (req, res) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -61,13 +63,19 @@ app.post('/change_coin', function (req, res) {
   var coin = req.body.coin;
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  const ip = req.clientIp;
   res.end("done");
+  fs.writeFile('last-ip.txt', ip, (err) => {
+    // throws an error, you could also catch it here
+    if (err) throw err;
+    console.log('/change_coin POST - Saved to last-ip.txt file: ' + ip);
+  });
   fs.writeFile('coin.txt', coin, (err) => {
     // throws an error, you could also catch it here
     if (err) throw err;
-    console.log('/change_coin POST - Saved to file: ' + coin);
+    console.log('/change_coin POST - Saved to coin.txt file: ' + coin);
   });
-  PostGitlab();
+  //PostGitlab();
 });
 
 app.get('/which_coin', function (req, res) {
@@ -75,6 +83,23 @@ app.get('/which_coin', function (req, res) {
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
       console.log('/which_coin GET - Coin requested from file: ' + data);
+      res.setHeader("Content-Type", "text/html");
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      res.write(data);
+      res.end();
+
+    } else {
+      console.log(err);
+    }
+  });
+});
+
+app.get('/last_ip', function (req, res) {
+  var filePath = path.join(__dirname, 'last-ip.txt');
+  fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+    if (!err) {
+      console.log('/last_ip GET - Last-ip requested from file: ' + data);
       res.setHeader("Content-Type", "text/html");
       res.header("Access-Control-Allow-Origin", "*");
       res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
