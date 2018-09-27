@@ -75,7 +75,7 @@ app.post('/change_coin', function (req, res) {
     if (err) throw err;
     console.log('/change_coin POST - Saved to coin.txt file: ' + coin);
   });
-  //PostGitlab();
+  PostGitlab();
 });
 
 app.get('/which_coin', function (req, res) {
