@@ -6,9 +6,10 @@ const bodyParser = require("body-parser");
 const path = require('path');
 const request = require('request');
 const requestIp = require('request-ip');
+const { BittrexClient } = require('bittrex-node')
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8081;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -57,6 +58,26 @@ app.get('/binance', function (req, res) {
   } else {
     console.log("/binance GET - Wrong public key provided")
   }
+});
+
+// returns bittrex account data, only if correct matching public key is provided
+app.get('/bittrex', function (req, res) {
+  var key = req.param("key");
+  if (key == "078d1e09f5904381ac071a97a0685bda") {
+    // Authenticated client, can make signed callss
+    let client = new BittrexClient({
+      apiKey: key,
+      apiSecret: '05f6d559b7f8488983d4514bf3799411'
+    })
+    client.balance('BTC').then(account => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      res.send(JSON.stringify(account.Balance))
+    })
+      console.log("/bittrex GET - API requested")
+    } else {
+        console.log("/bittrex GET - Wrong public key provided")
+      }
 });
 
 app.post('/change_coin', function (req, res) {
