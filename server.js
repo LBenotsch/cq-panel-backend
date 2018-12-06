@@ -6,12 +6,17 @@ const bodyParser = require("body-parser");
 const path = require('path');
 const request = require('request');
 const requestIp = require('request-ip');
-const { BittrexClient } = require('bittrex-node')
+const {
+  BittrexClient
+} = require('bittrex-node')
+const Cryptopia = require('cryptopia-api')();
 
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(bodyParser.json());
 app.use(requestIp.mw());
 
@@ -24,8 +29,7 @@ app.get('/', function (req, res) {
 
 function PostGitlab() {
   request.post(
-    'https://gitlab.com/api/v4/projects/5281857/trigger/pipeline',
-    {
+    'https://gitlab.com/api/v4/projects/5281857/trigger/pipeline', {
       json: {
         'token': 'ba1d7bf9cbccc3105ada5dd06df157',
         'ref': 'master',
@@ -74,10 +78,45 @@ app.get('/bittrex', function (req, res) {
       res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
       res.send(JSON.stringify(account.Balance))
     })
-      console.log("/bittrex GET - API requested")
-    } else {
-        console.log("/bittrex GET - Wrong public key provided")
+    console.log("/bittrex GET - API requested")
+  } else {
+    console.log("/bittrex GET - Wrong public key provided")
+  }
+});
+
+// returns cryptopia account data, only if correct matching public key is provided
+app.get('/cryptopia', function (req, res) {
+  var key = req.param("key");
+  if (key == "dd0fa121eddc4ec18a9a52ddfdef411b") {
+    // Authenticated client, can make signed callss
+    const options = {
+      API_KEY: key,
+      API_SECRET: 'OTrmwgkEB3dA1U4SBU/3RHQcP/b056+bPPmx52cgk3E=',
+      HOST_URL: 'https://www.cryptopia.co.nz/api'
+    };
+    Cryptopia.setOptions(options);
+
+    (async function () {
+      try {
+        const balance = await Cryptopia.getBalance({
+          Currency: 'BTC'
+        });
+        if (balance.Success == true) {
+          var btcBalance = balance.Data[Object.keys(balance.Data)[0]].Total;
+          console.log(btcBalance);
+          res.header("Access-Control-Allow-Origin", "*");
+          res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+          res.send(JSON.stringify(btcBalance))
+        }
+      } catch (err) {
+        console.error(err);
       }
+    })();
+
+    console.log("/cryptopia GET - API requested")
+  } else {
+    console.log("/cryptopia GET - Wrong public key provided")
+  }
 });
 
 app.post('/change_coin', function (req, res) {
@@ -101,7 +140,9 @@ app.post('/change_coin', function (req, res) {
 
 app.get('/which_coin', function (req, res) {
   var filePath = path.join(__dirname, 'coin.txt');
-  fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+  fs.readFile(filePath, {
+    encoding: 'utf-8'
+  }, function (err, data) {
     if (!err) {
       console.log('/which_coin GET - Coin requested from file: ' + data);
       res.setHeader("Content-Type", "text/html");
@@ -118,7 +159,9 @@ app.get('/which_coin', function (req, res) {
 
 app.get('/last_ip', function (req, res) {
   var filePath = path.join(__dirname, 'last-ip.txt');
-  fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+  fs.readFile(filePath, {
+    encoding: 'utf-8'
+  }, function (err, data) {
     if (!err) {
       console.log('/last_ip GET - Last-ip requested from file: ' + data);
       res.setHeader("Content-Type", "text/html");
